@@ -142,4 +142,42 @@ public class PostController {
         Comment savedComment = commentRepository.save(comment);
         return ResponseEntity.status(HttpStatus.CREATED).body(savedComment);
     }
+
+    // 특정 id의 댓글 삭제
+    @DeleteMapping("/{postId}/comments/{commentId}")
+    public ResponseEntity<Void> deleteComment(@PathVariable Long postId, @PathVariable Long commentId) {
+        if (!postRepository.existsById(postId)) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+
+        Optional<Comment> optionalComment = commentRepository.findById(commentId);
+        if (optionalComment.isPresent() && optionalComment.get().getPost().getId().equals(postId)) {
+            commentRepository.deleteById(commentId);
+            return ResponseEntity.noContent().build();
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+    }
+
+    // 특정 id의 댓글 수정
+    @PatchMapping("/{postId}/comments/{commentId}")
+    public ResponseEntity<Comment> updateComment(@PathVariable Long postId, @PathVariable Long commentId, @RequestBody Comment updatedComment) {
+        if (!postRepository.existsById(postId)) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+
+        Optional<Comment> optionalComment = commentRepository.findById(commentId);
+        if (optionalComment.isPresent() && optionalComment.get().getPost().getId().equals(postId)) {
+            Comment existingComment = optionalComment.get();
+
+            if (updatedComment.getContent() != null) {
+                existingComment.setContent(updatedComment.getContent());
+            }
+
+            commentRepository.save(existingComment);
+            return ResponseEntity.ok(existingComment);
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+    }
 }
